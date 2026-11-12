@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Uma carta pra você</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b0f;
+    --muted: #9a9aa8;
+    --paper: #f6efdf;
+    --ink: #3a2f22;
+    --env-back: #c9b58a;
+    --env-front: #e3d3ab;
+    --env-flap: #d4c096;
+    --wax: #b3202a;
+    --w: min(86vw, 340px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: #f3f3f6;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { min-height: 100dvh; display: flex; align-items: center; justify-content: center;
+    padding: 24px 16px calc(24px + env(safe-area-inset-bottom)); overflow-x: hidden; }
+  main { width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+  /* ---------- envelope ---------- */
+  #stage { display: flex; flex-direction: column; align-items: center; gap: 28px;
+    transition: opacity .5s ease, transform .5s ease; }
+  #stage.gone { opacity: 0; transform: scale(.92) translateY(10px); pointer-events: none; }
+
+  .to { font-family: "Caveat", "Segoe Print", "Bradley Hand", cursive; font-size: 1.9rem;
+    color: #e9dcc0; margin: 0; text-align: center; }
+
+  .envelope { position: relative; width: var(--w); height: calc(var(--w) * .66); padding: 0; border: 0;
+    background: none; cursor: pointer; perspective: 900px; margin-top: calc(var(--w) * .3);
+    filter: drop-shadow(0 18px 24px rgba(0,0,0,.55)); animation: float 3.2s ease-in-out infinite; }
+  .envelope:focus-visible { outline: 2px solid #fff; outline-offset: 8px; border-radius: 8px; }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  .envelope.open { animation: none; }
+
+  .env-back { position: absolute; inset: 0; background: var(--env-back); border-radius: 6px; }
+
+  .peek { position: absolute; left: 7%; right: 7%; top: 8%; height: 86%; background: var(--paper);
+    border-radius: 4px; z-index: 2; padding: 16% 12% 0;
+    transition: transform .8s cubic-bezier(.3,.7,.3,1) .35s; }
+  .peek i { display: block; height: 3px; border-radius: 2px; background: #cdbf9f; margin-bottom: 9px; opacity: .8; }
+  .peek i:nth-child(2) { width: 82%; } .peek i:nth-child(3) { width: 64%; }
+  .envelope.open .peek { transform: translateY(-62%); }
+
+  .env-front { position: absolute; inset: 0; z-index: 3; border-radius: 6px;
+    background: linear-gradient(180deg, #e9dab4, var(--env-front));
+    clip-path: polygon(0 0, 50% 54%, 100% 0, 100% 100%, 0 100%); }
+  .env-front::after { content: ""; position: absolute; inset: 0;
+    background:
+      linear-gradient(to top right, transparent 49.5%, rgba(120,95,50,.22) 50%, transparent 50.6%) left bottom / 50% 54% no-repeat,
+      linear-gradient(to top left,  transparent 49.5%, rgba(120,95,50,.22) 50%, transparent 50.6%) right bottom / 50% 54% no-repeat; }
+
+  .flap { position: absolute; top: 0; left: 0; width: 100%; height: 54%; z-index: 4; background: var(--env-flap);
+    clip-path: polygon(0 0, 100% 0, 50% 100%); transform-origin: top center;
+    transition: transform .6s ease, z-index 0s; }
+  .envelope.open .flap { transform: rotateX(180deg); z-index: 1; transition: transform .6s ease, z-index 0s .3s; }
+
+  /* selo de cera, sem desenho */
+  .seal { position: absolute; left: 50%; top: 54%; width: 42px; height: 42px; margin: -21px 0 0 -21px; z-index: 5;
+    border-radius: 50%; background: radial-gradient(circle at 35% 30%, #d2434c, var(--wax) 55%, #7d1119);
+    box-shadow: 0 3px 6px rgba(0,0,0,.4), inset 0 0 0 5px rgba(0,0,0,.08);
+    transition: opacity .25s ease, transform .25s ease; }
+  .envelope.open .seal { opacity: 0; transform: scale(.4); }
+
+  .hint { color: var(--muted); font-size: .95rem; letter-spacing: .04em; margin: 0;
+    animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
+  .hint.hide { opacity: 0; animation: none; transition: opacity .2s; }
+
+  /* ---------- carta ---------- */
+  #card { display: none; width: min(92vw, 400px); background: var(--paper); color: var(--ink);
+    border-radius: 6px; padding: 30px 24px 28px; position: relative;
+    box-shadow: 0 24px 50px rgba(0,0,0,.55);
+    background-image: repeating-linear-gradient(to bottom, transparent 0 31px, rgba(150,125,80,.18) 31px 32px);
+    background-position: 0 14px; }
+  #card.show { display: block; animation: rise .7s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(40px) scale(.94); } to { opacity: 1; transform: none; } }
+
+  .body p { font-family: "Caveat", "Segoe Print", "Bradley Hand", cursive; font-size: 1.6rem; line-height: 32px;
+    margin: 0 0 28px; opacity: 0; animation: fadeUp .7s ease forwards; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- calculadora ---------- */
+  .calc { width: min(100%, 260px); margin: 0 auto; padding: 14px; border-radius: 18px; background: #2b2b33;
+    border: 2px solid #4a4a56; box-shadow: 0 8px 18px rgba(0,0,0,.35);
+    opacity: 0; animation: fadeUp .8s ease forwards; user-select: none; -webkit-user-select: none; }
+  .calc-screen { height: 62px; margin-bottom: 12px; padding: 0 12px; border-radius: 8px; background: #b9d8a4; color: #243320;
+    display: flex; align-items: center; justify-content: flex-end; overflow: hidden; white-space: nowrap;
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; font-size: 1.8rem; box-shadow: inset 0 2px 6px rgba(0,0,0,.25); }
+  .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .key { height: 52px; border: 0; border-radius: 10px; background: #8a8a96; color: #111; font: inherit; font-size: 1.3rem;
+    font-weight: 700; cursor: pointer; touch-action: manipulation; transition: transform .08s, filter .08s; }
+  .key:active { transform: scale(.94); filter: brightness(1.15); }
+  .key.fn { background: #5d5d69; color: #fff; }
+  .key.op { background: #ff8a3d; color: #1a1006; }
+  .key.op.on { background: #fff; }
+  .key.eq { background: #ff8a3d; color: #1a1006; }
+  .key.wide { grid-column: span 2; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .envelope, .hint { animation: none; }
+    .peek, .flap, #stage { transition-duration: .01s; transition-delay: 0s; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div id="stage">
+    <p class="to" id="to"></p>
+    <button class="envelope" id="env" aria-label="Abrir a carta">
+      <div class="env-back"></div>
+      <div class="peek"><i></i><i></i><i></i></div>
+      <div class="env-front"></div>
+      <div class="flap"></div>
+      <div class="seal"></div>
+    </button>
+    <p class="hint" id="hint">toque no envelope para abrir</p>
+  </div>
+
+  <article id="card">
+    <div class="body" id="body"></div>
+    <div class="calc" id="calc" aria-label="Calculadora">
+      <div class="calc-screen" id="disp">0</div>
+      <div class="keys" id="keys"></div>
+    </div>
+  </article>
+</main>
+
+<script>
+// ---- EDITE AQUI ----
+const CONFIG = {
+  PARA: "Maria",
+  // Cada item é um parágrafo da carta. Mantenha curto.
+  PARAGRAFOS: [
+    "toma uma calculadora pra te ajudar nas provas lindinha"
+  ]
+};
+
+const $ = (id) => document.getElementById(id);
+
+// textos
+$("to").textContent = "Para " + CONFIG.PARA;
+CONFIG.PARAGRAFOS.forEach((t, i) => {
+  const p = document.createElement("p");
+  p.textContent = t;
+  p.style.animationDelay = (0.5 + i * 0.9) + "s";
+  $("body").appendChild(p);
+});
+$("calc").style.animationDelay = (0.5 + CONFIG.PARAGRAFOS.length * 0.9) + "s";
+
+// ---------- abrir o envelope ----------
+let opened = false;
+$("env").addEventListener("click", () => {
+  if (opened) return;
+  opened = true;
+  $("env").classList.add("open");
+  $("hint").classList.add("hide");
+
+  setTimeout(() => {
+    $("stage").classList.add("gone");
+    setTimeout(() => {
+      $("stage").style.display = "none";
+      $("card").classList.add("show");
+      window.scrollTo({ top: 0 });
+    }, 500);
+  }, 1500);
+});
+
+// ---------- calculadora ----------
+const disp = $("disp");
+let cur = "0", prev = null, op = null, fresh = false;
+
+const LAYOUT = [
+  ["C", "fn", "clear"], ["⌫", "fn", "back"], ["%", "fn", "pct"], ["÷", "op", "/"],
+  ["7", "", "7"], ["8", "", "8"], ["9", "", "9"], ["×", "op", "*"],
+  ["4", "", "4"], ["5", "", "5"], ["6", "", "6"], ["−", "op", "-"],
+  ["1", "", "1"], ["2", "", "2"], ["3", "", "3"], ["+", "op", "+"],
+  ["0", "wide", "0"], [",", "", "dot"], ["=", "eq", "eq"]
+];
+
+LAYOUT.forEach(([label, cls, act]) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "key " + cls;
+  b.textContent = label;
+  b.dataset.act = act;
+  b.setAttribute("aria-label", { "/": "dividir", "*": "multiplicar", "-": "menos", "+": "mais", back: "apagar", clear: "limpar", pct: "porcentagem", dot: "vírgula", eq: "igual" }[act] || label);
+  b.addEventListener("click", () => press(act));
+  $("keys").appendChild(b);
+});
+
+function render() {
+  const t = cur.replace(".", ",");
+  disp.textContent = t;
+  disp.style.fontSize = t.length > 11 ? "1.05rem" : t.length > 9 ? "1.35rem" : "1.8rem";
+  document.querySelectorAll(".key.op").forEach(k => k.classList.toggle("on", fresh && op === k.dataset.act));
+}
+function compute(a, b, o) {
+  a = parseFloat(a); b = parseFloat(b);
+  if (o === "+") return a + b;
+  if (o === "-") return a - b;
+  if (o === "*") return a * b;
+  if (o === "/") return b === 0 ? NaN : a / b;
+  return b;
+}
+function toStr(r) {
+  if (!isFinite(r)) return "Erro";
+  const s = String(parseFloat(r.toPrecision(10)));
+  return s.includes("e") ? "Erro" : s;
+}
+function reset() { cur = "0"; prev = null; op = null; fresh = false; }
+
+function press(act) {
+  if (cur === "Erro" && act !== "clear") reset();
+  if (/^[0-9]$/.test(act)) {
+    if (fresh) { cur = "0"; fresh = false; }
+    if (cur.replace(/[-.]/g, "").length >= 12) return;
+    cur = cur === "0" ? act : cur + act;
+  } else if (act === "dot") {
+    if (fresh) { cur = "0"; fresh = false; }
+    if (!cur.includes(".")) cur += ".";
+  } else if (act === "clear") {
+    reset();
+  } else if (act === "back") {
+    if (fresh) reset();
+    else cur = cur.length > 1 && !(cur.length === 2 && cur[0] === "-") ? cur.slice(0, -1) : "0";
+  } else if (act === "pct") {
+    cur = toStr(parseFloat(cur) / 100); fresh = true;
+  } else if (act === "eq") {
+    if (op) { cur = toStr(compute(prev, cur, op)); prev = null; op = null; fresh = true; }
+  } else {
+    // + - * /
+    if (op && !fresh) {
+      cur = toStr(compute(prev, cur, op));
+      if (cur === "Erro") { prev = null; op = null; fresh = false; render(); return; }
+    }
+    prev = cur; op = act; fresh = true;
+  }
+  render();
+}
+
+// teclado (no computador)
+document.addEventListener("keydown", (e) => {
+  if (!$("card").classList.contains("show")) return;
+  const k = e.key;
+  if (/^[0-9]$/.test(k)) press(k);
+  else if (k === "," || k === ".") press("dot");
+  else if ("+-*/".includes(k)) press(k);
+  else if (k === "Enter" || k === "=") { e.preventDefault(); press("eq"); }
+  else if (k === "Backspace") press("back");
+  else if (k === "Escape") press("clear");
+});
+</script>
+</body>
+</html>
